@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
    readNSGAParameters(argc, argv, mop, p);
 
    cout << "\nInput data successfully entered, now performing initialization.\n";
-   string oDir = "/home/lily/Documentos/Thesis/VERSIONES_FINALES/NN_v1/"; // :)
+   string oDir = "/home/lily/Escritorio/1/Proyecto_Terminal/NeuralNetwork_arm/NSGA/salida"; // :)
    NSGA nsga(mop, &r, oDir, p);
 
    cout << "\nNSGA-II was successfully created.\n";

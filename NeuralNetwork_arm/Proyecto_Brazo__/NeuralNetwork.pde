@@ -37,14 +37,16 @@ class NeuralNetwork {
         numPesos = numPesos + (OutputLayer.getNumNeurons() * HiddenLayer.get(HiddenLayer.size()-1).getNumNeurons());
     }
     
-    public void setInput(ArrayList<Double> input, Double riesgo){
+    public void setInput(ArrayList<Double> input, Double riesgo, int isObst){
         //System.out.println(input.size()+", "+(InputLayer.getNumNeurons()-1));
-        input.add(riesgo);
+        if(isObst == 1){
+          input.add(riesgo);
+        }        
         if(input.size() == InputLayer.getNumNeurons()){
             InputLayer.setInput(input);
             
         } else{
-            System.out.println("Error al introducir los datos. Revisa los datos de entrada.");
+            System.out.println("Error al introducir los datos. Revisa los datos de entrada. (Mensaje enviado desde la clase NeuralNetwork)");
         }        
     }
 

@@ -94,6 +94,50 @@ NSGA::NSGA(MOP *mop, Randomizer *r, string outputDir, NSGAParams &gaParams)
    name_objSpace = "obj_space.out";
 }
 
+void NSGA::report_pop_2files(Population *pop, int gen) const
+{
+   char buffer[200];
+   string filePattern;
+
+   filePattern = outputDir + "/historia/obj_space_gen_%03d.out";
+   sprintf(buffer, filePattern.c_str(), gen); // Sustituir gen en %3d
+   string fileNameObj(buffer);
+
+   filePattern = outputDir + "/historia/var_space_gen_%03d.out";
+   sprintf(buffer, filePattern.c_str(), gen); // Sustituir gen en %3d
+   string fileNameVar(buffer);
+
+   ofstream outputVar, outputObj;
+
+   outputObj.open(fileNameObj, ios::out);
+   outputVar.open(fileNameVar, ios::out);
+
+   outputObj << fixed << setw(5 + 8) << setprecision(8);
+   outputVar << fixed << setw(5 + 8) << setprecision(8);
+
+   int i, j;
+   for (i=0; i < pop->getSize(); i++)
+   {
+      for (j=0; j < nobj; j++)
+         outputObj << pop->ind[i]->obj[j] << "\t";
+
+      if ( ncon != 0 ) {
+         for (j=0; j < ncon; j++)
+            outputObj << pop->ind[i]->constr[j] << "\t";
+      }
+
+      for (j=0; j < nreal; j++)
+         outputVar << pop->ind[i]->xreal[j] << "\t";
+
+      outputObj << "\n";
+      outputVar << "\n";
+   }
+
+   outputObj.close();
+   outputVar.close();
+}
+
+
 void NSGA::allocate_memory() {
    /*
    allocate_memory_pop (parent_pop, popsize);
@@ -188,6 +232,9 @@ void NSGA::optimize()
    //initPFRange(parent_pop);
    file_everyPop << "# gen = 1\n";
    report_pop_objs(parent_pop, file_everyPop);
+
+   //report_pop_2files(parent_pop, i);
+
    file_everyPop << "# end gen = 1\n";
 
    float minDist=-10000.0;
@@ -226,6 +273,9 @@ void NSGA::optimize()
 
       file_everyPop << "# gen = " << i << "\n";
       report_pop_objs(parent_pop, file_everyPop);
+
+      report_pop_2files(parent_pop, i);
+      
       file_everyPop << "# end gen = " << i << "\n";
 
       minDist=-10000.0;

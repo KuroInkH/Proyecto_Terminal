@@ -109,6 +109,8 @@ public:
 
    ~NSGA();
 
+   void report_pop_2files(Population *pop, int gen) const;
+
    void startWithThisPopulation(vector<vector<double> > const &initPop);
    void startWithRandomPopulation();
 

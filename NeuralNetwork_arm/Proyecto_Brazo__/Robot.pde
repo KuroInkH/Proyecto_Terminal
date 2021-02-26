@@ -226,6 +226,10 @@ class Robot extends Thread {
    *   - Regresar valores de los objetivos.
    */
    public void run() {
+        //When there is a obstacle value is 1, otherwise 0
+        int isObstacle = 1;
+
+        //Here we connect with the NSGA-II
         System.out.println("Entrando al run del hilo...");
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
@@ -245,12 +249,11 @@ class Robot extends Thread {
         BufferedReader in;
         BufferedWriter wr;
 
-        //This is the version with bias
-        int inputNeurons = 4, hiddenNeurons = 6, outputNeurons = 5;
+        //We create the neural network
+        int inputNeurons = 3+isObstacle, hiddenNeurons = 6, outputNeurons = 5;
         ArrayList<Integer> hiddenLayers = new ArrayList<Integer>();
         hiddenLayers.add(hiddenNeurons);
-        //hiddenLayers.add(2);
-        NeuralNetwork nn = new NeuralNetwork(inputNeurons,  hiddenLayers, outputNeurons);
+        NeuralNetwork nn = new NeuralNetwork(inputNeurons,  hiddenLayers, outputNeurons); 
         
         try {
           in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -287,19 +290,10 @@ class Robot extends Thread {
             nn.setWeight(w2);
 
             double[] resultados = new double[3];
-            double actualDistance = 100000, obstacleDistance = 10000;
-            double distProm = 0, colRiskProm = 0, sumAngProm = 0, sumA = 0;
-            int MaxIt = 15, finalIterNumber = 0, numEscenarios = 1; //numEscenarios = 3;
-            
-            for(int z = 0; z < numEscenarios; z++){
-              System.out.println("Trabajando en el escenario " + z);
-              chocado = false;
-              actualDistance = 100000;
-              obstacleDistance = 10000;
-              finalIterNumber = 0;
-              setScene(z);
-              
-              for (int k = 0; k < initAngles.length; k++) {
+            double actualDistance = Integer.MAX_VALUE, obstacleDistance = Integer.MAX_VALUE, sumAng = 0;
+            int MaxIt = 15, finalIterNumber = 0;
+
+            for (int k = 0; k < initAngles.length; k++) {
                   anglesServos[k] = initAngles[k];
               }
               try{
@@ -308,16 +302,20 @@ class Robot extends Thread {
               catch(InterruptedException ie) {
               }
               
-              while(!chocado && finalIterNumber < MaxIt && actualDistance > 0){
-                float riesgo = 10000000;
+              //Coloca los obstáculos. Ya están predefinidos.
+              setScene(0);
+
+            while(finalIterNumber < MaxIt && actualDistance > 5){
+                float riesgo = Integer.MAX_VALUE;
+;
                 for(int y = 0; y < numObstaculos; y++){
-                  float temp = getObstacleDistance(obstaculo[y]);
-                  if (temp < riesgo) {
-                    riesgo = temp;
-                  }
+                    float temp = getObstacleDistance(obstaculo[y]);
+                    if (temp < riesgo) {
+                      riesgo = temp;
+                    }
                 }
-                
-                nn.setInput(getCoordDistance(), (double)riesgo);
+
+                nn.setInput(getCoordDistance(), (double)riesgo, isObstacle);
                 nn.calcular();
                 angles = nn.getAngles();
                 
@@ -331,24 +329,31 @@ class Robot extends Thread {
                 if(resultados[1] < obstacleDistance)
                   obstacleDistance = resultados[1];
 
-                if(resultados[2] < actualDistance)
+                if(resultados[2] < actualDistance){
                   actualDistance = resultados[2];
-  
-                sumAngProm  = sumAngProm + resultados[0];
+                  sumAng = resultados[0];
+                }
   
                 finalIterNumber++;
-              }
-              
-              
-              System.out.println("Riesgo de colisión: " + obstacleDistance);
-              System.out.println("Mejor distancia: "+ actualDistance);
-              distProm = distProm + actualDistance;
-              colRiskProm = colRiskProm + obstacleDistance;
-              sumA  = sumA + (sumAngProm/finalIterNumber);  
             }
-            resultados[0] = sumA/numEscenarios;
-            resultados[1] = 1/(colRiskProm/numEscenarios);
-            resultados[2] = distProm/numEscenarios;
+            
+            System.out.println("Riesgo de colisión: " + obstacleDistance);
+            System.out.println("Mejor distancia: "+ actualDistance);         
+            System.out.println("Complejidad de ángulos: "+ sumAng);         
+
+            resultados[0] = sumAng;
+            if(isObstacle == 0){
+              resultados[1] = 0;
+            } else{
+              resultados[1] = 1/obstacleDistance;
+            }
+            
+            if(actualDistance < 5){
+              resultados[2] = 0;
+            } else{
+              resultados[2] = actualDistance;
+            }            
+            
             System.out.println("Resultados");
             System.out.println("Obj1: Suma de ángulos: "+resultados[0]);
             System.out.println("Obj2: Distancia promedio a obstaculos: " + resultados[1]);
@@ -365,6 +370,7 @@ class Robot extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
       }
    }
    
@@ -374,7 +380,7 @@ class Robot extends Thread {
      switch(actualScene){
        case 0:
          obstaculo[0].isVisible = true;
-         obstaculo[1].isVisible = true;
+         obstaculo[1].isVisible = false;
          obstaculo[2].isVisible = false;
          obstaculo[3].isVisible = false;
          break;
@@ -469,7 +475,7 @@ class Robot extends Thread {
     CoordObst[3].y=397.27917;
     CoordObst[3].z=-374.7792;*/
 
-    objeto1 = new Objeto(objCoord[0],40,150,20,10);
+    objeto1 = new Objeto(objCoord[1],40,150,20,10);
     
     
     
